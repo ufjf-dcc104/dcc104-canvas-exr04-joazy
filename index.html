@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>DCC104 - Exercicio 04</title>
+     <canvas id='canvas' style='position:absolute; left:0px; top:0px; bottom:0px; right:0px; margin:auto;'></canvas>
+    <script src="ImageLoader.js" charset="utf-8"></script>
+    <script src="AudioLoader.js" charset="utf-8"></script>
+    <script src="Sprite.js" charset="utf-8"></script>
+    <script src="Level.js" charset="utf-8"></script>
+  </head>
+  <body>
+    <canvas></canvas>
+    <script>
+      var eCanvas = document.getElementsByTagName("canvas")[0];
+      eCanvas.width = 600;
+      eCanvas.height = 380;
+      var ctx = eCanvas.getContext("2d");
+      var il = new ImageLoader();
+      il.load("pc", "images/player_ship.png");
+      il.load("enemy", "images/enemy_1.png");
+      il.load("shot", "images/shot.png");
+      il.load("background","images/background.png" );
+      il.load("predio","images/predio4.png" );
+      il.load("gameover","images/gameover.png" );
+      var al = new AudioLoader();
+      al.load("shot", "audios/Missle_Launch-Kibblesbob-2118796725.mp3");
+      al.load("boom", "audios/Grenade-SoundBible.com-1777900486.mp3");
+
+      var fps = 120;
+      var atual = new Date();
+      var anterior = new Date();
+      var dt = 1/fps;
+
+      var azul = new Sprite();
+      azul.x = 305;
+      azul.y = 320;
+      var fuel = 100;
+      var acelerandoX = false;
+      var acelerandoY = false;
+      var mira = new Sprite();
+      mira.x = 200;
+      mira.y = 200;
+      var level = new Level();
+      level.imageLib = il;
+
+      var inimigo = new Sprite();
+      inimigo.x = 200;
+      inimigo.y = 200;
+      inimigo.width = 100;
+      inimigo.height = 100;
+    level.desenhaPredios(ctx);
+      //level.init();
+
+      desenha();
+
+
+
+
+      function desenha(){
+      if(level.VerificaGameOver()){
+        requestAnimationFrame(desenha);
+        atual = new Date();
+        dt = (atual - anterior)/1000;
+        ctx.clearRect(0,0,eCanvas.width, eCanvas.height)
+        ctx.drawImage(il.images["background"],0,0,il.images["background"].width, il.images["background"].height, 0,0,600,380);
+        ctx.strokeRect(0,0,eCanvas.width, eCanvas.height)
+        ctx.fillStyle = "darkgreen";
+        ctx.fillText("Pontos: "+level.pontos+" fps:"+Math.floor(1/dt), 10, 10);
+        mira.desenharMira(ctx);
+        level.desenhar(ctx);
+      //  level.perseguirAng(azul,dt);
+        level.moverEnemy(dt);
+        azul.perseguirAng(mira, dt);
+        azul.moverAng(dt);
+        level.moverAng(dt);
+        level.colidiuCom(azul,
+
+          function(inimigo, alvo){
+            inimigo.color = "red";
+          }
+        );
+            level.randomicEnemy(dt);
+        level.colidiuComPredios(al,"boom");
+        azul.desenharImg(ctx, il.images["pc"]);
+        level.desenharImg(ctx);
+        level.colidiuComTiros(al,"boom",level);
+        anterior = atual;
+      }
+      else{
+        ctx.clearRect(0,0,eCanvas.width, eCanvas.height);
+         ctx.drawImage(il.images["gameover"],0,0,il.images["gameover"].width, il.images["gameover"].height, 0,0,600,380);
+      }
+      }
+
+      addEventListener("keydown", function(e){
+        if(fuel<=0) return;
+        switch (e.keyCode) {
+          case 32:
+          level.fire(azul, al, "shot", 0.5);
+
+            break;
+
+          case 37:
+            mira.x -= 4;
+            break;
+          case 38:
+            mira.y -= 4;
+            break;
+          case 39:
+          mira.x += 4;
+            break;
+          case 40:
+            mira.y +=4;
+            break;
+          default:
+
+        }
+      });
+      addEventListener("keyup", function(e){
+        switch (e.keyCode) {
+          case 37:
+            azul.vang = 0;
+            break;
+          case 38:
+            azul.am = 0;
+            break;
+          case 39:
+            azul.vang = 0;
+            break;
+          case 40:
+            azul.am = 0;
+            break;
+          default:
+
+        }
+      });
+
+      addEventListener('mousemove', function(evt){
+              var mousePos = getMousePos(eCanvas, evt);
+              var message = "Mouse position: " + mousePos.x + "," + mousePos.y;
+              mira.x = mousePos.x;
+              mira.y = mousePos.y;
+          }, false);
+
+          function getMousePos(canvas, evt){
+              // get canvas position
+              var obj = canvas;
+              var top = 0;
+              var left = 0;
+
+                  top += obj.offsetTop;
+                  left += obj.offsetLeft;
+                  obj = obj.offsetParent;
+
+
+              // return relative mouse position
+              var mouseX = evt.clientX - left + window.pageXOffset;
+              var mouseY = evt.clientY - top + window.pageYOffset;
+              return {
+                  x: mouseX,
+                  y: mouseY
+              };
+          }
+    </script>
+  </body>
+
+
+
+
+</html>
